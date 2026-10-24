@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New RN Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --ink:#16181d; --muted:#5d6370; --line:#e3e1da;
+  --old:#d1495b; --old-soft:#fbe4e7; --new:#1f8a70; --new-soft:#dcf2ea;
+  --accent:#3b5bdb; --accent-soft:#e3e9ff; --amber:#c98a12; --amber-soft:#fbf0d9;
+  --code:#f0eee8; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111317; --surface:#1a1d23; --ink:#eceef2; --muted:#9aa1ad; --line:#2b2f37;
+  --old:#ef6f7f; --old-soft:#3a2026; --new:#4cc9a4; --new-soft:#173229;
+  --accent:#7c95ff; --accent-soft:#222a45; --amber:#f0b54a; --amber-soft:#3a2f17;
+  --code:#22262d; --shadow:none;}}
+:root[data-theme="dark"]{
+  --bg:#111317; --surface:#1a1d23; --ink:#eceef2; --muted:#9aa1ad; --line:#2b2f37;
+  --old:#ef6f7f; --old-soft:#3a2026; --new:#4cc9a4; --new-soft:#173229;
+  --accent:#7c95ff; --accent-soft:#222a45; --amber:#f0b54a; --amber-soft:#3a2f17;
+  --code:#22262d; --shadow:none;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+section{padding:88px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+.eyebrow{font:600 12px/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+h1{font-size:clamp(36px,6vw,64px);line-height:1.05;letter-spacing:-.03em;margin:0 0 20px;font-weight:800}
+h2{font-size:clamp(26px,3.6vw,38px);line-height:1.15;letter-spacing:-.02em;margin:0 0 14px;font-weight:700}
+h3{font-size:18px;margin:0 0 6px;font-weight:600}
+p.lead{font-size:clamp(17px,2vw,20px);color:var(--muted);max-width:720px;margin:0 0 36px}
+.muted{color:var(--muted)}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.88em}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.tag{display:inline-block;font:600 11px/1 Inter;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:6px}
+.tag.m{background:var(--new-soft);color:var(--new)}
+.tag.e{background:var(--amber-soft);color:var(--amber)}
+.tag.o{background:var(--old-soft);color:var(--old)}
+/* reveal */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}
+
+/* hero */
+.hero{padding-top:96px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.stat .lbl{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:12px}
+.stat .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.stat .from{font:600 18px Inter;color:var(--old);text-decoration:line-through;text-decoration-thickness:2px}
+.stat .arrow{color:var(--muted)}
+.stat .to{font:800 34px/1 Inter;color:var(--new);letter-spacing:-.02em}
+.stat .foot{font-size:12px;color:var(--muted);margin-top:12px}
+
+/* constraint */
+.container-viz{display:grid;grid-template-columns:1fr 280px;gap:32px;align-items:center}
+.membar{height:56px;border-radius:12px;background:var(--code);position:relative;overflow:hidden;border:1px solid var(--line)}
+.membar .fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--accent),#7d5bdb);transition:width 1.8s cubic-bezier(.2,.7,.2,1)}
+.membar .cap{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:700 14px Inter;color:var(--ink)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+.users{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:28px}
+.user{aspect-ratio:1;border-radius:12px;border:1.5px dashed var(--line);display:grid;place-items:center;transition:all .4s}
+.user svg{width:46%;opacity:.25;transition:opacity .4s}
+.user.on{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
+.user.on svg{opacity:1}
+.rules li{margin:0 0 12px;padding-left:28px;position:relative}
+.rules li::before{content:"";position:absolute;left:0;top:7px;width:14px;height:14px;border-radius:4px;background:var(--accent-soft);border:2px solid var(--accent)}
+.rules{list-style:none;padding:0;margin:0}
+
+/* pipelines */
+.pipes{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.pipe h3{display:flex;align-items:center;gap:10px}
+.dot{width:10px;height:10px;border-radius:50%}
+.pipe svg{width:100%;height:auto;display:block;margin-top:14px}
+.stage rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .35s,stroke .35s}
+.stage text{fill:var(--ink);font:600 13px Inter}
+.stage .sub{fill:var(--muted);font:500 11px Inter}
+.stage.hot rect{stroke-width:2.5}
+.pipe.old .stage.hot rect{fill:var(--old-soft);stroke:var(--old)}
+.pipe.new .stage.hot rect{fill:var(--new-soft);stroke:var(--new)}
+.stage.reused rect{fill:var(--code);stroke-dasharray:4 4}
+.wire{stroke:var(--line);stroke-width:2;fill:none}
+.flow{stroke-width:3;fill:none;stroke-dasharray:6 10;opacity:0;transition:opacity .3s}
+.pipe.old .flow{stroke:var(--old)} .pipe.new .flow{stroke:var(--new)}
+.flow.run{opacity:1;animation:dash 0.8s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-16}}
+.ctrl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:28px 0 0}
+button{font:600 14px Inter;padding:12px 20px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);cursor:pointer;transition:transform .15s}
+button:active{transform:scale(.97)}
+button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.timer{font:700 22px "JetBrains Mono";min-width:110px}
+.pipe.old .timer{color:var(--old)} .pipe.new .timer{color:var(--new)}
+.pipe .result{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+/* chunks */
+.chunks{display:grid;grid-template-columns:2.4fr 1.3fr 1.6fr .7fr .5fr;gap:8px;margin:20px 0 10px}
+.chunk{border-radius:12px;padding:16px 14px;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;border:1.5px solid var(--line);background:var(--surface);transition:all .4s}
+.chunk b{font-size:15px}
+.chunk span{font-size:12px;color:var(--muted)}
+.chunk .freq{font:600 11px Inter;text-transform:uppercase;letter-spacing:.06em}
+.chunk.flash{background:var(--new-soft);border-color:var(--new);transform:translateY(-6px)}
+.legend-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+
+/* fixes */
+.fixes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.fix{perspective:1000px;min-height:230px;cursor:pointer}
+.fix .inner{position:relative;width:100%;height:100%;min-height:230px;transition:transform .7s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}
+.fix.flip .inner{transform:rotateY(180deg)}
+.fix .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;padding:22px;border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.fix .front{background:var(--surface)}
+.fix .back{background:var(--new-soft);border-color:var(--new);transform:rotateY(180deg)}
+.fix .num{font:800 13px "JetBrains Mono";color:var(--muted)}
+.fix p{margin:0;font-size:14.5px}
+.fix .hint{margin-top:auto;font-size:12px;color:var(--muted)}
+
+/* charts */
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.bar-row{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center;margin:14px 0}
+.bar-row .k{font-size:13px;color:var(--muted);font-weight:500}
+.track{height:34px;position:relative}
+.bar{position:relative;height:100%;border-radius:8px;width:0;transition:width 1.4s cubic-bezier(.2,.7,.2,1);display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font:700 13px Inter;color:#fff;white-space:nowrap}
+.bar.old{background:var(--old)} .bar.new{background:var(--new)}
+.bar.est{background:repeating-linear-gradient(135deg,var(--amber) 0 8px,color-mix(in srgb,var(--amber) 70%,transparent) 8px 16px)}
+.bar .out{position:absolute;left:calc(100% + 8px);color:var(--ink)}
+.chart-foot{font-size:12px;color:var(--muted);margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.table{width:100%;border-collapse:collapse;font-size:14px;margin-top:24px}
+.table th,.table td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.table th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+
+/* pages grid */
+.pages-wrap{display:grid;grid-template-columns:1fr 300px;gap:32px;align-items:start}
+.grid{display:grid;grid-template-columns:repeat(40,1fr);gap:3px}
+.cell{aspect-ratio:1;border-radius:2px;background:var(--code);transition:background .5s,transform .5s}
+.cell.all{background:color-mix(in srgb,var(--old) 55%,transparent)}
+.cell.ws{background:var(--new);transform:scale(1.25)}
+.cell.req{background:var(--accent);transform:scale(1.25)}
+.toggle{display:inline-flex;background:var(--code);border-radius:10px;padding:4px;gap:4px;margin-bottom:18px}
+.toggle button{background:transparent;color:var(--muted);padding:8px 14px}
+.toggle button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.big{font:800 44px/1 Inter;letter-spacing:-.02em}
+
+/* controls */
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+pre{background:var(--code);border-radius:10px;padding:16px 18px;margin:14px 0 0;overflow-x:auto;font:14px/1.6 "JetBrains Mono",monospace}
+.k1{color:var(--accent)} .s1{color:var(--new)} .b1{color:var(--old)}
+footer{padding:48px 0 80px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+
+@media (max-width:820px){
+  .stats,.pipes,.fixes,.charts,.controls,.container-viz,.pages-wrap{grid-template-columns:1fr}
+  .chunks{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:repeat(25,1fr)}
+  .bar-row{grid-template-columns:70px 1fr}
+  .table{min-width:560px}
+  section{padding:64px 0}
+  .wrap{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero"><div class="wrap">
+  <div class="eyebrow rv">WaveMaker React Native · Web preview</div>
+  <h1 class="rv">Preview, rebuilt for<br>shared containers.</h1>
+  <p class="lead rv">The new preview builds the app in layers, shares libraries between projects, and rebuilds only what you changed — all inside a 2.5 GB container shared by up to ten people.</p>
+  <div class="stats">
+    <div class="card stat rv">
+      <div class="lbl">Clean preview · small app</div>
+      <div class="row"><span class="from">2m 06s</span><span class="arrow">→</span><span class="to">47–142s</span></div>
+      <div class="foot"><span class="tag m">measured</span> with shared libraries already installed</div>
+    </div>
+    <div class="card stat rv">
+      <div class="lbl">Edit → visible in preview</div>
+      <div class="row"><span class="from">full rebuild</span><span class="arrow">→</span><span class="to">~10s</span></div>
+      <div class="foot"><span class="tag m">measured</span> 9.6–12.7s; hot patch itself ~0.3s</div>
+    </div>
+    <div class="card stat rv">
+      <div class="lbl">Peak memory, heavy rebuild</div>
+      <div class="row"><span class="from">at 2.5 GB cap</span><span class="arrow">→</span><span class="to">2.2 GB</span></div>
+      <div class="foot"><span class="tag m">measured</span> no out-of-memory kills</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- CONSTRAINT -->
+<section id="constraint"><div class="wrap">
+  <div class="eyebrow rv">01 · The constraint</div>
+  <h2 class="rv">One small box. Up to ten people.</h2>
+  <p class="lead rv">Every design choice follows from this. A preview container has a hard 2.5 GB memory cap and serves 5–10 users at once — roughly 200–400 MB each.</p>
+  <div class="container-viz">
+    <div class="rv">
+      <div class="membar"><div class="fill" id="memfill"></div><div class="cap">2,536 MB cap</div></div>
+      <div class="scale"><span>0</span><span>idle ~400 MB</span><span>cap</span></div>
+      <div class="users" id="users"></div>
+    </div>
+    <div class="card rv">
+      <h3>What that rules out</h3>
+      <ul class="rules" style="margin-top:14px">
+        <li>No dev server kept running per project</li>
+        <li>Builds are short-lived; caches live on disk, not in memory</li>
+        <li>No user's project code is ever shared with another project</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- PIPELINES -->
+<section id="pipes"><div class="wrap">
+  <div class="eyebrow rv">02 · Old vs new</div>
+  <h2 class="rv">Same edit. Very different amount of work.</h2>
+  <p class="lead rv">Press “Make an edit”. The old builder redoes every step. The new one skips what hasn't changed and patches the open preview.</p>
+  <div class="pipes">
+    <div class="card pipe old rv" id="pipeOld">
+      <h3><span class="dot" style="background:var(--old)"></span>Old · esbuild</h3>
+      <div class="muted" style="font-size:14px">One bundle, rebuilt in full</div>
+      <svg viewBox="0 0 440 330" aria-label="Old pipeline">
+        <path class="wire" d="M220 54 V84 M220 138 V168 M220 222 V252"/>
+        <path class="flow" d="M220 54 V84 M220 138 V168 M220 222 V252"/>
+        <g class="stage" data-s="0"><rect x="70" y="4" width="300" height="50" rx="10"/><text x="88" y="27">Generate code</text><text class="sub" x="88" y="44">all pages, every time</text></g>
+        <g class="stage" data-s="1"><rect x="70" y="84" width="300" height="54" rx="10"/><text x="88" y="107">npm install into project</text><text class="sub" x="88" y="124">2.3 GB node_modules per project</text></g>
+        <g class="stage" data-s="2"><rect x="70" y="168" width="300" height="54" rx="10"/><text x="88" y="191">esbuild the whole app</text><text class="sub" x="88" y="208">every file, every edit</text></g>
+        <g class="stage" data-s="3"><rect x="70" y="252" width="300" height="54" rx="10"/><text x="88" y="275">One 6.8 MB bundle</text><text class="sub" x="88" y="292">browser reloads everything</text></g>
+      </svg>
+      <div class="result"><span>Time for this edit</span><span class="timer" id="tOld">0.0s</span></div>
+    </div>
+    <div class="card pipe new rv" id="pipeNew">
+      <h3><span class="dot" style="background:var(--new)"></span>New · Metro split bundle</h3>
+      <div class="muted" style="font-size:14px">Layers, shared libraries, hot patch</div>
+      <svg viewBox="0 0 440 330" aria-label="New pipeline">
+        <path class="wire" d="M220 54 V84 M220 138 V168 M220 222 V252"/>
+        <path class="flow" d="M220 54 V84 M220 138 V168 M220 222 V252"/>
+        <g class="stage" data-s="0"><rect x="70" y="4" width="300" height="50" rx="10"/><text x="88" y="27">Generate changed page</text><text class="sub" x="88" y="44">only what was edited</text></g>
+        <g class="stage" data-s="1"><rect x="70" y="84" width="300" height="54" rx="10"/><text x="88" y="107">Shared library store</text><text class="sub" x="88" y="124">installed once, linked into projects</text></g>
+        <g class="stage" data-s="2"><rect x="70" y="168" width="300" height="54" rx="10"/><text x="88" y="191">Metro, with disk cache</text><text class="sub" x="88" y="208">re-transforms changed files only</text></g>
+        <g class="stage" data-s="3"><rect x="70" y="252" width="300" height="54" rx="10"/><text x="88" y="275">Small “modified” chunk</text><text class="sub" x="88" y="292">hot-patched into the open preview</text></g>
+      </svg>
+      <div class="result"><span>Time for this edit</span><span class="timer" id="tNew">0.0s</span></div>
+    </div>
+  </div>
+  <div class="ctrl rv">
+    <button id="editBtn">Make an edit</button>
+    <span class="muted" style="font-size:13px">Timers are scaled 10× faster than real time · small app, measured</span>
+  </div>
+</div></section>
+
+<!-- CHUNKS -->
+<section id="chunks"><div class="wrap">
+  <div class="eyebrow rv">03 · How the new bundle is cut</div>
+  <h2 class="rv">Five layers, split by how often they change.</h2>
+  <p class="lead rv">Things that rarely change are built once and reused — even across projects. Only the thin layers at the end are rebuilt when you edit.</p>
+  <div class="chunks rv" id="chunkRow">
+    <div class="chunk"><div><b>vendor</b><br><span>React Native, libraries</span></div><div class="freq muted">shared · rarely</div></div>
+    <div class="chunk"><div><b>extras</b><br><span>project-specific packages</span></div><div class="freq muted">rarely</div></div>
+    <div class="chunk"><div><b>user</b><br><span>your pages &amp; partials</span></div><div class="freq muted">baseline</div></div>
+    <div class="chunk" data-hot><div><b>modified</b><br><span>just the edit</span></div><div class="freq" style="color:var(--new)">every edit</div></div>
+    <div class="chunk" data-hot><div><b>boot</b><br><span>wiring</span></div><div class="freq" style="color:var(--new)">every edit</div></div>
+  </div>
+  <div class="legend-row rv"><span>← built once, reused</span><span>rebuilt on edit →</span></div>
+</div></section>
+
+<!-- FIXES -->
+<section id="fixes"><div class="wrap">
+  <div class="eyebrow rv">04 · For architects</div>
+  <h2 class="rv">What broke on the way, and how we fixed it.</h2>
+  <p class="lead rv">Each card is a real failure we measured on the container. Tap a card to see the fix.</p>
+  <div class="fixes" id="fixGrid"></div>
+</div></section>
+
+<!-- NUMBERS -->
+<section id="numbers"><div class="wrap">
+  <div class="eyebrow rv">05 · The numbers</div>
+  <h2 class="rv">Small apps today. Big apps next.</h2>
+  <p class="lead rv">Solid bars are measured on the preview container. Striped bars are estimates we haven't measured yet.</p>
+  <div class="charts">
+    <div class="card rv">
+      <h3>Small app · clean preview</h3>
+      <div class="muted" style="font-size:13px">seconds, lower is better</div>
+      <div class="bars" data-max="150">
+        <div class="bar-row"><span class="k">Old</span><div class="track"><div class="bar old" data-v="126">2m 06s</div></div></div>
+        <div class="bar-row"><span class="k">New, best</span><div class="track"><div class="bar new" data-v="47">47s</div></div></div>
+        <div class="bar-row"><span class="k">New, worst</span><div class="track"><div class="bar new" data-v="142">142s</div></div></div>
+      </div>
+      <div class="chart-foot"><span class="tag m">measured</span> Sep 2026 · shared libraries already installed</div>
+    </div>
+    <div class="card rv">
+      <h3>Small app · edit to visible</h3>
+      <div class="muted" style="font-size:13px">seconds, lower is better</div>
+      <div class="bars" data-max="130">
+        <div class="bar-row"><span class="k">Old</span><div class="track"><div class="bar old" data-v="126">~2 min</div></div></div>
+        <div class="bar-row"><span class="k">New</span><div class="track"><div class="bar new" data-v="12.7"><span class="out">9.6–12.7s</span></div></div></div>
+        <div class="bar-row"><span class="k">Hot patch</span><div class="track"><div class="bar new" data-v="0.6"><span class="out">~0.3s</span></div></div></div>
+      </div>
+      <div class="chart-foot"><span class="tag m">measured</span> old = full rebuild on every edit</div>
+    </div>
+    <div class="card rv">
+      <h3>Big app (PNB, 3,381 files) · clean preview</h3>
+      <div class="muted" style="font-size:13px">minutes, lower is better</div>
+      <div class="bars" data-max="22">
+        <div class="bar-row"><span class="k">All pages</span><div class="track"><div class="bar new" data-v="21">~21 min</div></div></div>
+        <div class="bar-row"><span class="k">Working set</span><div class="track"><div class="bar est" data-v="2"><span class="out">1–2 min</span></div></div></div>
+      </div>
+      <div class="chart-foot"><span class="tag m">measured</span> 21 min · <span class="tag e">estimate</span> working set · old path not measured on PNB</div>
+    </div>
+    <div class="card rv">
+      <h3>Memory on the 2.5 GB container</h3>
+      <div class="muted" style="font-size:13px">MB at peak</div>
+      <div class="bars" data-max="2600">
+        <div class="bar-row"><span class="k">Old</span><div class="track"><div class="bar old" data-v="2535">2,535 · at cap</div></div></div>
+        <div class="bar-row"><span class="k">New, rebuild</span><div class="track"><div class="bar new" data-v="2203">2,203</div></div></div>
+        <div class="bar-row"><span class="k">New, first ever</span><div class="track"><div class="bar old" data-v="2536">2,536 · at cap</div></div></div>
+      </div>
+      <div class="chart-foot"><span class="tag m">measured</span> first-ever build still installs shared libraries (~1.6 GB) — the admission gate queues others</div>
+    </div>
+  </div>
+  <div style="overflow-x:auto"><table class="table rv">
+    <tr><th>What</th><th>Old</th><th>New</th><th>Source</th></tr>
+    <tr><td>Disk per project</td><td>2.3 GB node_modules</td><td>libraries shared on the device</td><td><span class="tag m">measured</span></td></tr>
+    <tr><td>Bundle sent to browser</td><td>one 6.8 MB file</td><td>5 chunks; edits ship only the small ones</td><td><span class="tag m">measured</span></td></tr>
+    <tr><td>First build on an empty container</td><td>—</td><td>287s, two installs</td><td><span class="tag m">measured</span></td></tr>
+    <tr><td>Big app, edit to visible</td><td>not measured</td><td>2–5s with working set</td><td><span class="tag e">estimate</span></td></tr>
+    <tr><td>Small app page count</td><td colspan="2">not recorded for these runs</td><td><span class="tag o">gap</span></td></tr>
+  </table></div>
+</div></section>
+
+<!-- WORKING SET -->
+<section id="pages"><div class="wrap">
+  <div class="eyebrow rv">06 · Big apps</div>
+  <h2 class="rv">Build the pages you use, not all of them.</h2>
+  <p class="lead rv">Large apps can have 600–800 pages, but a developer touches a handful at a time. The working set builds those, and turns the rest into light stubs that build the moment you open them.</p>
+  <div class="pages-wrap">
+    <div class="card rv">
+      <div class="toggle" id="wsToggle"><button class="on" data-m="all">Build all pages</button><button data-m="ws">Working set</button></div>
+      <div class="grid" id="pageGrid"></div>
+      <div class="chart-foot" style="margin-top:16px">
+        <span class="tag e">illustration</span> each square ≈ 2 pages ·
+        <span><span class="cell all" style="display:inline-block;width:10px"></span> built</span>
+        <span><span class="cell ws" style="display:inline-block;width:10px;transform:none"></span> home, login, edited</span>
+        <span><span class="cell req" style="display:inline-block;width:10px;transform:none"></span> opened in preview</span>
+      </div>
+    </div>
+    <div class="card rv">
+      <div class="muted" style="font-size:13px">Pages built</div>
+      <div class="big" id="wsCount">All</div>
+      <div class="muted" style="font-size:13px;margin-top:18px">Clean preview</div>
+      <div class="big" id="wsTime" style="font-size:32px">~21 min</div>
+      <div id="wsTag" style="margin-top:10px"><span class="tag m">measured</span></div>
+      <p class="muted" style="font-size:13px;margin:18px 0 0">Always included: home page, login page, shared partials, pages you edit, and partials those pages embed.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- CONTROLS -->
+<section id="controls"><div class="wrap">
+  <div class="eyebrow rv">07 · You stay in control</div>
+  <h2 class="rv">Two switches in <span class="mono">wm_rn_config.json</span></h2>
+  <p class="lead rv">The new preview is on by default. Teams can fall back or opt in per project.</p>
+  <div class="controls">
+    <div class="card rv">
+      <h3>Fall back to the classic builder</h3>
+      <div class="muted" style="font-size:14px">If a project misbehaves on the new preview.</div>
+<pre><span class="k1">"profile"</span>: <span class="s1">"legacy-web-preview"</span>,</pre>
+    </div>
+    <div class="card rv">
+      <h3>Build only the pages you need</h3>
+      <div class="muted" style="font-size:14px">Opt-in, for big apps.</div>
+<pre><span class="k1">"preview"</span>: {
+    <span class="k1">"allPages"</span>: <span class="b1">false</span>,
+    <span class="k1">"pages"</span>: [<span class="s1">"Main"</span>, <span class="s1">"Dashboard"</span>]
+},</pre>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Sources: measurements on the rn-preview-builder container (2.5 GB cap), Sep–Oct 2026 — small app “rn”, big app PNB (3,381 project files). Old path measured on published codegen 12.0.0-rc.647733 (esbuild). Estimates are labelled and not yet measured.
+</div></footer>
+
+<script>
+(function(){
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* reveal on scroll */
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
+  $$('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%4)*70+'ms';io.observe(el)});
+
+  /* users + memory */
+  const personSvg='<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>';
+  const users=$('#users'); for(let i=0;i<10;i++){const d=document.createElement('div');d.className='user';d.style.color='var(--accent)';d.innerHTML=personSvg;users.appendChild(d)}
+  const once=(el,fn)=>{const o=new IntersectionObserver(es=>{if(es[0].isIntersecting){fn();o.disconnect()}},{threshold:.35});o.observe(el)};
+  once($('#constraint'),()=>{
+    const u=$$('.user');let i=0;
+    const t=setInterval(()=>{if(i>=u.length){clearInterval(t);return}u[i].classList.add('on');i++;$('#memfill').style.width=(16+i*8.4)+'%'},reduce?0:220);
+  });
+
+  /* pipelines */
+  const oldStages=$$('#pipeOld .stage'), newStages=$$('#pipeNew .stage');
+  let running=false;
+  function tick(el,target,ms){return new Promise(r=>{const t0=performance.now();(function f(now){const p=Math.min(1,(now-t0)/ms);el.textContent=(target*p).toFixed(target<1?1:1)+'s';p<1?requestAnimationFrame(f):r()})(t0)})}
+  async function runOld(){
+    const fl=$('#pipeOld .flow');fl.classList.add('run');
+    const steps=[[0,1500],[1,5200],[2,3200],[3,2700]]; // ~126s/10 scaled
+    const t0=performance.now();const timer=$('#tOld');
+    const iv=setInterval(()=>{timer.textContent=((performance.now()-t0)/1000*10).toFixed(0)+'s'},100);
+    for(const [s,ms] of steps){oldStages[s].classList.add('hot');await new Promise(r=>setTimeout(r,ms/5))}
+    clearInterval(iv);timer.textContent='~126s';fl.classList.remove('run');
+  }
+  async function runNew(){
+    const fl=$('#pipeNew .flow');fl.classList.add('run');
+    newStages[1].classList.add('reused');
+    const t0=performance.now();const timer=$('#tNew');
+    const iv=setInterval(()=>{timer.textContent=((performance.now()-t0)/1000*10).toFixed(1)+'s'},100);
+    newStages[0].classList.add('hot');await new Promise(r=>setTimeout(r,200));
+    newStages[2].classList.add('hot');await new Promise(r=>setTimeout(r,500));
+    newStages[3].classList.add('hot');await new Promise(r=>setTimeout(r,300));
+    clearInterval(iv);timer.textContent='~10s';fl.classList.remove('run');
+    $$('#chunkRow [data-hot]').forEach(c=>{c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1600)});
+  }
+  $('#editBtn').addEventListener('click',async()=>{
+    if(running)return;running=true;
+    [...oldStages,...newStages].forEach(s=>s.classList.remove('hot','reused'));
+    $('#tOld').textContent='0s';$('#tNew').textContent='0.0s';
+    await Promise.all([runOld(),runNew()]);running=false;$('#editBtn').textContent='Edit again';
+  });
+
+  /* chunk ambient pulse */
+  once($('#chunks'),()=>{$$('#chunkRow [data-hot]').forEach(c=>{c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1600)})});
+
+  /* fixes */
+  const fixes=[
+    ['A single build was killed at 2.5 GB','Metro spawned its own node process with no memory limit, so the kernel killed it mid-build and left an empty bundle.','Metro now runs with a heap cap sized to the container (about 1 GB here), behind a memory-aware admission gate.'],
+    ['Every project copied 2.6 GB of libraries','npm rewrote the shared library links into real folders, and the file cache it left behind filled the container.','Libraries install once per device and are hardlinked into each project; vendor patches run before the store is locked.'],
+    ['The gate blocked builds with nobody else building','It counted the OS file cache as “used” memory, so it waited forever for headroom.','The gate now measures the real working set: memory used minus reclaimable file cache.'],
+    ['A hung build held memory forever','After an out-of-memory kill, child processes kept running and nothing cleaned them up.','A stall watchdog checks CPU progress and kills the whole process tree, verifying nothing survives.'],
+    ['Big builds looked stuck and were killed','Expo prints nothing when output is piped, so a silence timer reaped healthy 20-minute builds.','The watchdog watches CPU progress and OOM events instead of output silence. (In progress — not yet released.)'],
+    ['Big apps took ~21 minutes','Every clean preview transformed all 3,381 project files, even pages nobody opened.','The opt-in working set builds the pages in use and stubs the rest until opened.']
+  ];
+  const grid=$('#fixGrid');
+  fixes.forEach((f,i)=>{const d=document.createElement('div');d.className='fix rv';d.innerHTML=
+    `<div class="inner"><div class="face front"><span class="num">0${i+1} · problem</span><h3>${f[0]}</h3><p class="muted">${f[1]}</p><span class="hint">Tap for the fix →</span></div>
+     <div class="face back"><span class="num" style="color:var(--new)">0${i+1} · fix</span><p>${f[2]}</p></div></div>`;
+    d.addEventListener('click',()=>d.classList.toggle('flip'));grid.appendChild(d);io.observe(d)});
+
+  /* bars */
+  $$('.bars').forEach(b=>once(b,()=>{const max=+b.dataset.max;b.querySelectorAll('.bar').forEach(bar=>{bar.style.width=Math.max(1.2,(+bar.dataset.v/max)*(innerWidth<820?58:78))+'%'})}));
+
+  /* pages grid: 400 cells, each = 2 pages */
+  const pg=$('#pageGrid');const N=400;
+  for(let i=0;i<N;i++){const c=document.createElement('div');c.className='cell all';pg.appendChild(c)}
+  const cells=$$('#pageGrid .cell');
+  const wsIdx=[0,1,57,58,143,212], reqIdx=[88,301];
+  let mode='all', reqTimer;
+  function setMode(m){
+    mode=m;clearTimeout(reqTimer);
+    $$('#wsToggle button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+    if(m==='all'){cells.forEach((c,i)=>setTimeout(()=>{c.className='cell all'},reduce?0:i*2));
+      $('#wsCount').textContent='All';$('#wsTime').textContent='~21 min';$('#wsTag').innerHTML='<span class="tag m">measured</span>';}
+    else{cells.forEach(c=>c.className='cell');
+      wsIdx.forEach((i,k)=>setTimeout(()=>cells[i].className='cell ws',200+k*150));
+      reqTimer=setTimeout(()=>{reqIdx.forEach((i,k)=>setTimeout(()=>{cells[i].className='cell req';$('#wsCount').textContent=12+(k+1)*2},k*700))},1400);
+      $('#wsCount').textContent='12';$('#wsTime').textContent='1–2 min';$('#wsTag').innerHTML='<span class="tag e">estimate</span>';}
+  }
+  $$('#wsToggle button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.m)));
+  once($('#pages'),()=>setTimeout(()=>setMode('ws'),900));
+})();
+</script>
+</body>
+</html>
